@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using System.Xml;
 
 namespace LQAFixer
@@ -23,10 +23,19 @@ namespace LQAFixer
             xml.XmlResolver = resolver;
             int count = 0;
             int total = LQAReports.Count();
+            Dictionary<string, string> teams = new Dictionary<string, string>()
+            {
+                { "Business", "Business Team" },
+                { "ML Med", "Med Team" },
+                { "Microsoft", "MS Team" },
+                { "RU+CIS Tech", "RU-Tech Team" },
+                { "Ru-Tech Team", "RU-Tech Team" },
+                { "ML Tech", "Tech Team" }
+            };
 
             foreach (var item in LQAReports)
             {
-                string path = string.Format("http://inside.office.palex/lqa/New LQA Test/{0}", item.Имя);
+                string path = string.Format("\\\\inside.office.palex\\lqa\\New LQA Test\\{0}", item.Имя);
                 try
                 {
                     xml.Load(path);
@@ -36,8 +45,14 @@ namespace LQAFixer
                     XmlNode root = xml.DocumentElement;
 
                     XmlNode team = root.SelectSingleNode("my:Team", ns);
-                    Console.WriteLine(team.InnerText);
-                    Console.Read();
+
+                    if (team != null && teams.ContainsKey(team.InnerText))
+                    {
+                        team.InnerText = teams[team.InnerText];
+                        xml.Save(path);
+                        Thread.Sleep(500);
+                    }                  
+                    
                 }
                 catch(Exception e)
                 {
@@ -47,7 +62,6 @@ namespace LQAFixer
                 }
                 Console.Clear();
                 Console.WriteLine("Обработано элементов: {0} из {1}", ++count, total);
-                
             }
 
             Console.WriteLine("Элементов: {0}", LQAReports.Count());
